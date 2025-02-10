@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+        "net"
 
 	"github.com/asaskevich/govalidator"
 
@@ -108,7 +109,7 @@ func (c *Configuration) validate() (bool, error) {
 type Sbi struct {
 	Scheme       string `yaml:"scheme" valid:"scheme"`
 	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,required"` // IP that is registered at NRF.
-	BindingIPv4  string `yaml:"bindingIPv4,omitempty" valid:"host,required"`  // IP used to run the server in the node.
+	BindingIP  string `yaml:"bindingIP,omitempty" valid:"host,required"`  // IP used to run the server in the node.
 	Port         int    `yaml:"port,omitempty" valid:"port,required"`
 	Tls          *Tls   `yaml:"tls,omitempty" valid:"optional"`
 }
@@ -240,7 +241,14 @@ func (c *Config) GetLogReportCaller() bool {
 func (c *Config) GetSbiBindingAddr() string {
 	c.RLock()
 	defer c.RUnlock()
-	return c.GetSbiBindingIP() + ":" + strconv.Itoa(c.GetSbiPort())
+
+	bindIP := c.GetSbiBindingIP()
+	bindIPv4 := net.ParseIP(bindIP).To4()
+	if bindIPv4 != nil {
+		return bindIPv4.String() + ":" + strconv.Itoa(c.GetSbiPort())
+	} else {
+	        return "[" + bindIP + "]" + ":" + strconv.Itoa(c.GetSbiPort())
+	}
 }
 
 func (c *Config) GetSbiBindingIP() string {
@@ -250,11 +258,11 @@ func (c *Config) GetSbiBindingIP() string {
 	if c.Configuration == nil || c.Configuration.Sbi == nil {
 		return bindIP
 	}
-	if c.Configuration.Sbi.BindingIPv4 != "" {
-		if bindIP = os.Getenv(c.Configuration.Sbi.BindingIPv4); bindIP != "" {
-			logger.CfgLog.Infof("Parsing ServerIPv4 [%s] from ENV Variable", bindIP)
+	if c.Configuration.Sbi.BindingIP != "" {
+		if bindIP = os.Getenv(c.Configuration.Sbi.BindingIP); bindIP != "" {
+			logger.CfgLog.Infof("Parsing ServerIP [%s] from ENV Variable", bindIP)
 		} else {
-			bindIP = c.Configuration.Sbi.BindingIPv4
+			bindIP = c.Configuration.Sbi.BindingIP
 		}
 	}
 	return bindIP

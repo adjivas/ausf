@@ -40,14 +40,14 @@ func InitAusfContext(context *AUSFContext) {
 			context.UriScheme = models.UriScheme_HTTP
 		}
 
-		context.BindingIPv4 = os.Getenv(sbi.BindingIPv4)
-		if context.BindingIPv4 != "" {
+		context.BindingIP = os.Getenv(sbi.BindingIP)
+		if context.BindingIP != "" {
 			logger.InitLog.Info("Parsing ServerIPv4 address from ENV Variable.")
 		} else {
-			context.BindingIPv4 = sbi.BindingIPv4
-			if context.BindingIPv4 == "" {
+			context.BindingIP = sbi.BindingIP
+			if context.BindingIP == "" {
 				logger.InitLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
-				context.BindingIPv4 = "0.0.0.0"
+				context.BindingIP = "0.0.0.0"
 			}
 		}
 	}
