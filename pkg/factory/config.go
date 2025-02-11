@@ -108,8 +108,8 @@ func (c *Configuration) validate() (bool, error) {
 
 type Sbi struct {
 	Scheme       string `yaml:"scheme" valid:"scheme"`
-	RegisterIP string `yaml:"registerIP,omitempty" valid:"host,required"` // IP that is registered at NRF.
-	BindingIP  string `yaml:"bindingIP,omitempty" valid:"host,required"`  // IP used to run the server in the node.
+	RegisterIP   string `yaml:"registerIP,omitempty" valid:"host,required"` // IP that is registered at NRF.
+	BindingIP    string `yaml:"bindingIP,omitempty" valid:"host,required"`  // IP used to run the server in the node.
 	Port         int    `yaml:"port,omitempty" valid:"port,required"`
 	Tls          *Tls   `yaml:"tls,omitempty" valid:"optional"`
 }
