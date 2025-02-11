@@ -200,7 +200,7 @@ func (s *nnrfService) buildNfProfile(ausfContext *ausf_context.AUSFContext) (pro
 	profile.NfInstanceId = ausfContext.NfId
 	profile.NfType = models.NfType_AUSF
 	profile.NfStatus = models.NfStatus_REGISTERED
-	profile.Ipv4Addresses = append(profile.Ipv4Addresses, ausfContext.RegisterIPv4)
+	profile.Ipv4Addresses = append(profile.Ipv4Addresses, ausfContext.RegisterIP)
 	services := []models.NfService{}
 	for _, nfService := range ausfContext.NfService {
 		services = append(services, nfService)

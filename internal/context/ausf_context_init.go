@@ -3,7 +3,7 @@ package context
 import (
 	"fmt"
 	"os"
-	"strconv"
+	"net/netip"
 
 	"github.com/google/uuid"
 
@@ -24,11 +24,11 @@ func InitAusfContext(context *AUSFContext) {
 	context.NrfUri = configuration.NrfUri
 	context.NrfCertPem = configuration.NrfCertPem
 	context.UriScheme = models.UriScheme(configuration.Sbi.Scheme) // default uri scheme
-	context.RegisterIPv4 = factory.AusfSbiDefaultIPv4              // default localhost
+	context.RegisterIP = factory.AusfSbiDefaultIP                  // default localhost
 	context.SBIPort = factory.AusfSbiDefaultPort                   // default port
 	if sbi != nil {
-		if sbi.RegisterIPv4 != "" {
-			context.RegisterIPv4 = sbi.RegisterIPv4
+		if sbi.RegisterIP != "" {
+			context.RegisterIP = sbi.RegisterIP
 		}
 		if sbi.Port != 0 {
 			context.SBIPort = sbi.Port
@@ -42,17 +42,20 @@ func InitAusfContext(context *AUSFContext) {
 
 		context.BindingIP = os.Getenv(sbi.BindingIP)
 		if context.BindingIP != "" {
-			logger.InitLog.Info("Parsing ServerIPv4 address from ENV Variable.")
+			logger.InitLog.Info("Parsing ServerIP address from ENV Variable.")
 		} else {
 			context.BindingIP = sbi.BindingIP
 			if context.BindingIP == "" {
-				logger.InitLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
+				logger.InitLog.Warn("Error parsing ServerIP address as string. Using the 0.0.0.0 address as default.")
 				context.BindingIP = "0.0.0.0"
 			}
 		}
 	}
 
-	context.Url = string(context.UriScheme) + "://" + context.RegisterIPv4 + ":" + strconv.Itoa(context.SBIPort)
+	registerIP, _ := netip.ParseAddr(context.RegisterIP);
+	sbiPort := uint16(context.SBIPort)
+	context.Url = string(context.UriScheme) + "://" + netip.AddrPortFrom(registerIP, sbiPort).String()
+
 	context.PlmnList = append(context.PlmnList, configuration.PlmnSupportList...)
 
 	// context.NfService
@@ -74,7 +77,7 @@ func AddNfServices(serviceMap *map[models.ServiceName]models.NfService, config *
 	nfService.ServiceName = models.ServiceName_NAUSF_AUTH
 
 	var ipEndPoint models.IpEndPoint
-	ipEndPoint.Ipv4Address = context.RegisterIPv4
+	ipEndPoint.Ipv4Address = context.RegisterIP
 	ipEndPoint.Port = int32(context.SBIPort)
 	ipEndPoints = append(ipEndPoints, ipEndPoint)
 
