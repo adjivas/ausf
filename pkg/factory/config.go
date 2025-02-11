@@ -10,7 +10,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
-        "net"
+	"net/netip"
 
 	"github.com/asaskevich/govalidator"
 
@@ -23,7 +23,7 @@ const (
 	AusfDefaultCertPemPath        = "./cert/ausf.pem"
 	AusfDefaultPrivateKeyPath     = "./cert/ausf.key"
 	AusfDefaultConfigPath         = "./config/ausfcfg.yaml"
-	AusfSbiDefaultIPv4            = "127.0.0.9"
+	AusfSbiDefaultIP              = "127.0.0.9"
 	AusfSbiDefaultPort            = 8000
 	AusfSbiDefaultScheme          = "https"
 	AusfDefaultNrfUri             = "https://127.0.0.10:8000"
@@ -108,7 +108,7 @@ func (c *Configuration) validate() (bool, error) {
 
 type Sbi struct {
 	Scheme       string `yaml:"scheme" valid:"scheme"`
-	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,required"` // IP that is registered at NRF.
+	RegisterIP string `yaml:"registerIP,omitempty" valid:"host,required"` // IP that is registered at NRF.
 	BindingIP  string `yaml:"bindingIP,omitempty" valid:"host,required"`  // IP used to run the server in the node.
 	Port         int    `yaml:"port,omitempty" valid:"port,required"`
 	Tls          *Tls   `yaml:"tls,omitempty" valid:"optional"`
@@ -242,13 +242,9 @@ func (c *Config) GetSbiBindingAddr() string {
 	c.RLock()
 	defer c.RUnlock()
 
-	bindIP := c.GetSbiBindingIP()
-	bindIPv4 := net.ParseIP(bindIP).To4()
-	if bindIPv4 != nil {
-		return bindIPv4.String() + ":" + strconv.Itoa(c.GetSbiPort())
-	} else {
-	        return "[" + bindIP + "]" + ":" + strconv.Itoa(c.GetSbiPort())
-	}
+	bindIP, _ := netip.ParseAddr(c.GetSbiBindingIP());
+	sbiPort := uint16(c.GetSbiPort())
+	return netip.AddrPortFrom(bindIP, sbiPort).String()
 }
 
 func (c *Config) GetSbiBindingIP() string {
