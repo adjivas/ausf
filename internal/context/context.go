@@ -17,7 +17,9 @@ type AUSFContext struct {
 	GroupID              string
 	SBIPort              int
 	RegisterIPv4         string
+	RegisterIPv6         string
 	BindingIPv4          string
+	BindingIPv6          string
 	Url                  string
 	UriScheme            models.UriScheme
 	NrfUri               string

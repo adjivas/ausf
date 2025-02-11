@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"net/netip"
 
 	"github.com/asaskevich/govalidator"
 
@@ -23,6 +24,7 @@ const (
 	AusfDefaultPrivateKeyPath     = "./cert/ausf.key"
 	AusfDefaultConfigPath         = "./config/ausfcfg.yaml"
 	AusfSbiDefaultIPv4            = "127.0.0.9"
+	AusfSbiDefaultIPv6            = "::ffff:7f00:9"
 	AusfSbiDefaultPort            = 8000
 	AusfSbiDefaultScheme          = "https"
 	AusfDefaultNrfUri             = "https://127.0.0.10:8000"
@@ -107,13 +109,30 @@ func (c *Configuration) validate() (bool, error) {
 
 type Sbi struct {
 	Scheme       string `yaml:"scheme" valid:"scheme"`
-	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,required"` // IP that is registered at NRF.
-	BindingIPv4  string `yaml:"bindingIPv4,omitempty" valid:"host,required"`  // IP used to run the server in the node.
-	Port         int    `yaml:"port,omitempty" valid:"port,required"`
+	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,optional"` // IP that is registered at NRF.
+	RegisterIPv6 string `yaml:"registerIPv6,omitempty" valid:"host,optional"` // IP that is registered at NRF.
+	BindingIPv4  string `yaml:"bindingIPv4,omitempty" valid:"host,optional"`  // IP used to run the server in the node.
+	BindingIPv6  string `yaml:"bindingIPv6,omitempty" valid:"host,optional"`  // IP used to run the server in the node.
+	Port         int    `yaml:"port,omitempty" valid:"port,required,with_register,with_binding"`
 	Tls          *Tls   `yaml:"tls,omitempty" valid:"optional"`
 }
 
 func (s *Sbi) validate() (bool, error) {
+	govalidator.CustomTypeTagMap.Set("with_register", func(i interface{}, context interface{}) bool {
+		switch v := context.(type) {
+		case Sbi:
+			return v.RegisterIPv4 != "" || v.RegisterIPv6 != ""
+		}
+		return false
+	})
+	govalidator.CustomTypeTagMap.Set("with_binding", func(i interface{}, context interface{}) bool {
+		switch v := context.(type) {
+		case Sbi:
+			return v.BindingIPv4 != "" || v.BindingIPv6 != ""
+		}
+		return false
+	})
+
 	govalidator.TagMap["scheme"] = govalidator.Validator(func(str string) bool {
 		return str == "https" || str == "http"
 	})
@@ -240,7 +259,10 @@ func (c *Config) GetLogReportCaller() bool {
 func (c *Config) GetSbiBindingAddr() string {
 	c.RLock()
 	defer c.RUnlock()
-	return c.GetSbiBindingIP() + ":" + strconv.Itoa(c.GetSbiPort())
+
+	bindIP, _ := netip.ParseAddr(c.GetSbiBindingIP());
+	sbiPort := uint16(c.GetSbiPort())
+	return netip.AddrPortFrom(bindIP, sbiPort).String()
 }
 
 func (c *Config) GetSbiBindingIP() string {
@@ -250,7 +272,13 @@ func (c *Config) GetSbiBindingIP() string {
 	if c.Configuration == nil || c.Configuration.Sbi == nil {
 		return bindIP
 	}
-	if c.Configuration.Sbi.BindingIPv4 != "" {
+	if c.Configuration.Sbi.BindingIPv6 != "" {
+		if bindIP = os.Getenv(c.Configuration.Sbi.BindingIPv6); bindIP != "" {
+			logger.CfgLog.Infof("Parsing ServerIPv6 [%s] from ENV Variable", bindIP)
+		} else {
+			bindIP = c.Configuration.Sbi.BindingIPv6
+		}
+	} else if c.Configuration.Sbi.BindingIPv4 != "" {
 		if bindIP = os.Getenv(c.Configuration.Sbi.BindingIPv4); bindIP != "" {
 			logger.CfgLog.Infof("Parsing ServerIPv4 [%s] from ENV Variable", bindIP)
 		} else {

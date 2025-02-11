@@ -3,7 +3,7 @@ package context
 import (
 	"fmt"
 	"os"
-	"strconv"
+	"net/netip"
 
 	"github.com/google/uuid"
 
@@ -25,10 +25,14 @@ func InitAusfContext(context *AUSFContext) {
 	context.NrfCertPem = configuration.NrfCertPem
 	context.UriScheme = models.UriScheme(configuration.Sbi.Scheme) // default uri scheme
 	context.RegisterIPv4 = factory.AusfSbiDefaultIPv4              // default localhost
+	context.RegisterIPv6 = factory.AusfSbiDefaultIPv6              // default localhost
 	context.SBIPort = factory.AusfSbiDefaultPort                   // default port
 	if sbi != nil {
 		if sbi.RegisterIPv4 != "" {
 			context.RegisterIPv4 = sbi.RegisterIPv4
+		}
+		if sbi.RegisterIPv6 != "" {
+			context.RegisterIPv6 = sbi.RegisterIPv4
 		}
 		if sbi.Port != 0 {
 			context.SBIPort = sbi.Port
@@ -40,19 +44,35 @@ func InitAusfContext(context *AUSFContext) {
 			context.UriScheme = models.UriScheme_HTTP
 		}
 
-		context.BindingIPv4 = os.Getenv(sbi.BindingIPv4)
-		if context.BindingIPv4 != "" {
-			logger.InitLog.Info("Parsing ServerIPv4 address from ENV Variable.")
+		context.BindingIPv6 = os.Getenv(sbi.BindingIPv6)
+		if context.BindingIPv6 != "" {
+			logger.InitLog.Info("Parsing ServerIPv6 address from ENV Variable.")
 		} else {
-			context.BindingIPv4 = sbi.BindingIPv4
-			if context.BindingIPv4 == "" {
-				logger.InitLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
-				context.BindingIPv4 = "0.0.0.0"
+			context.BindingIPv6 = sbi.BindingIPv6
+			if context.BindingIPv6 == "" {
+				context.BindingIPv4 = os.Getenv(sbi.BindingIPv4)
+				if context.BindingIPv4 != "" {
+					logger.InitLog.Info("Parsing ServerIPv4 address from ENV Variable.")
+				} else {
+					context.BindingIPv4 = sbi.BindingIPv4
+					if context.BindingIPv4 == "" {
+						logger.InitLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
+						context.BindingIPv4 = "0.0.0.0"
+					}
+				}
 			}
 		}
 	}
 
-	context.Url = string(context.UriScheme) + "://" + context.RegisterIPv4 + ":" + strconv.Itoa(context.SBIPort)
+	sbiPort := uint16(context.SBIPort)
+	if context.RegisterIPv6 != "" {
+		registerIPv6, _ := netip.ParseAddr(context.RegisterIPv6);
+		context.Url = string(context.UriScheme) + "://" + netip.AddrPortFrom(registerIPv6, sbiPort).String()
+	} else {
+		registerIPv4, _ := netip.ParseAddr(context.RegisterIPv4);
+		context.Url = string(context.UriScheme) + "://" + netip.AddrPortFrom(registerIPv4, sbiPort).String()
+	}
+
 	context.PlmnList = append(context.PlmnList, configuration.PlmnSupportList...)
 
 	// context.NfService
@@ -75,6 +95,7 @@ func AddNfServices(serviceMap *map[models.ServiceName]models.NfService, config *
 
 	var ipEndPoint models.IpEndPoint
 	ipEndPoint.Ipv4Address = context.RegisterIPv4
+	ipEndPoint.Ipv6Address = context.RegisterIPv6
 	ipEndPoint.Port = int32(context.SBIPort)
 	ipEndPoints = append(ipEndPoints, ipEndPoint)
 
