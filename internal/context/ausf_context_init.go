@@ -39,7 +39,7 @@ func InitAusfContext(context *AUSFContext) {
 		} else if sbi.RegisterIPv4 != "" {
 			return sbi.RegisterIPv4
 		} else {
-			return factory.AusfSbiDefaultIPv6 // default uri scheme
+			return factory.AusfSbiDefaultIPv4 // default uri scheme
 		}
 	}()
 	if sbi != nil {
