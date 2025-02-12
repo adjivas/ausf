@@ -23,17 +23,26 @@ func InitAusfContext(context *AUSFContext) {
 	context.GroupID = configuration.GroupId
 	context.NrfUri = configuration.NrfUri
 	context.NrfCertPem = configuration.NrfCertPem
-	context.UriScheme = models.UriScheme(configuration.Sbi.Scheme) // default uri scheme
-	context.RegisterIPv4 = factory.AusfSbiDefaultIPv4              // default localhost
-	context.RegisterIPv6 = factory.AusfSbiDefaultIPv6              // default localhost
-	context.SBIPort = factory.AusfSbiDefaultPort                   // default port
-	if sbi != nil {
-		if sbi.RegisterIPv4 != "" {
-			context.RegisterIPv4 = sbi.RegisterIPv4
-		}
+	context.SBIPort = factory.AusfSbiDefaultPort // default port
+	context.RegisterIPv6 = func () string {
 		if sbi.RegisterIPv6 != "" {
-			context.RegisterIPv6 = sbi.RegisterIPv4
+			return sbi.RegisterIPv6
+		} else if sbi.RegisterIPv4 != "" {
+			return ""
+		} else {
+			return factory.AusfSbiDefaultIPv6 // default uri scheme
 		}
+	}()
+	context.RegisterIPv4 = func () string {
+		if sbi.RegisterIPv6 != "" {
+			return ""
+		} else if sbi.RegisterIPv4 != "" {
+			return sbi.RegisterIPv4
+		} else {
+			return factory.AusfSbiDefaultIPv6 // default uri scheme
+		}
+	}()
+	if sbi != nil {
 		if sbi.Port != 0 {
 			context.SBIPort = sbi.Port
 		}
@@ -68,7 +77,7 @@ func InitAusfContext(context *AUSFContext) {
 	if context.RegisterIPv6 != "" {
 		registerIPv6, _ := netip.ParseAddr(context.RegisterIPv6);
 		context.Url = string(context.UriScheme) + "://" + netip.AddrPortFrom(registerIPv6, sbiPort).String()
-	} else {
+	} else if context.RegisterIPv4 != "" {
 		registerIPv4, _ := netip.ParseAddr(context.RegisterIPv4);
 		context.Url = string(context.UriScheme) + "://" + netip.AddrPortFrom(registerIPv4, sbiPort).String()
 	}
