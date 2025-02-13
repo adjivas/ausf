@@ -86,7 +86,6 @@ func AddNfServices(serviceMap *map[models.ServiceName]models.NfService, config *
 
 	var ipEndPoint models.IpEndPoint
 	ipEndPoint.Port = int32(context.SBIPort)
-	ipEndPoints = append(ipEndPoints, ipEndPoint)
 
 	registerAddr := net_util.RegisterAddr(context.RegisterIP)
 	if registerAddr.Is6() {
@@ -94,6 +93,8 @@ func AddNfServices(serviceMap *map[models.ServiceName]models.NfService, config *
 	} else if registerAddr.Is4() {
 		ipEndPoint.Ipv4Address = context.RegisterIP
 	}
+
+	ipEndPoints = append(ipEndPoints, ipEndPoint)
 
 	var nfServiceVersion models.NfServiceVersion
 	nfServiceVersion.ApiFullVersion = config.Info.Version
