@@ -3,24 +3,15 @@ package context
 import (
 	"fmt"
 	"os"
-	"net"
 	"net/netip"
 
 	"github.com/google/uuid"
 
+	"github.com/free5gc/ausf/internal/net_util"
 	"github.com/free5gc/ausf/internal/logger"
 	"github.com/free5gc/ausf/pkg/factory"
 	"github.com/free5gc/openapi/models"
 )
-
-func RegisterAddr(registerIP string) netip.Addr {
-	ips, err := net.LookupIP(registerIP)
-	if err != nil {
-		logger.InitLog.Errorf("Resolve RegisterIP hostname %s failed: %+v", registerIP, err)
-	}
-	ip, _ := netip.ParseAddr(ips[0].String());
-	return ip
-}
 
 func InitAusfContext(context *AUSFContext) {
 	config := factory.AusfConfig
@@ -69,7 +60,7 @@ func InitAusfContext(context *AUSFContext) {
 		context.BindingIP = "0.0.0.0"
 	}
 
-	sbiRegisterIp := RegisterAddr(context.RegisterIP)
+	sbiRegisterIp := net_util.RegisterAddr(context.RegisterIP)
 	sbiPort := uint16(context.SBIPort)
 
 	context.Url = string(context.UriScheme) + "://" + netip.AddrPortFrom(sbiRegisterIp, sbiPort).String()
@@ -97,7 +88,7 @@ func AddNfServices(serviceMap *map[models.ServiceName]models.NfService, config *
 	ipEndPoint.Port = int32(context.SBIPort)
 	ipEndPoints = append(ipEndPoints, ipEndPoint)
 
-	registerAddr := RegisterAddr(context.RegisterIP)
+	registerAddr := net_util.RegisterAddr(context.RegisterIP)
 	if registerAddr.Is6() {
 		ipEndPoint.Ipv6Address = context.RegisterIP
 	} else if registerAddr.Is4() {

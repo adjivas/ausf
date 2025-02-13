@@ -275,7 +275,7 @@ func (c *Config) GetSbiBindingIP() string {
 		}
 	} else if c.Configuration.Sbi.BindingIPv4 != "" {
 		if bindIP = os.Getenv(c.Configuration.Sbi.BindingIPv4); bindIP != "" {
-			logger.CfgLog.Infof("Parsing ServerIP [%s] from ENV Variable", bindIP)
+			logger.CfgLog.Infof("Parsing ServerIPv4 [%s] from ENV Variable", bindIP)
 		} else {
 			bindIP = c.Configuration.Sbi.BindingIPv4
 		}
