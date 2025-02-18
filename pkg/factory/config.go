@@ -255,7 +255,11 @@ func (c *Config) GetSbiBindingAddr() string {
 	c.RLock()
 	defer c.RUnlock()
 
-	bindIP, _ := netip.ParseAddr(c.GetSbiBindingIP());
+	bindIP, err := netip.ParseAddr(c.GetSbiBindingIP());
+	if err == nil {
+		logger.CfgLog.Warnf("Logger should not be nil")
+		return ""
+	}
 	sbiPort := uint16(c.GetSbiPort())
 	return netip.AddrPortFrom(bindIP, sbiPort).String()
 }

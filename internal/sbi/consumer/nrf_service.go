@@ -227,7 +227,7 @@ func (s *nnrfService) buildNfProfile(ausfContext *ausf_context.AUSFContext) (pro
 		// 	},
 		// },
 	}
-	return
+	return profile, nil
 }
 
 func (s *nnrfService) GetUdmUrl(nrfUri string) string {
