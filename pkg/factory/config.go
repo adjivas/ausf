@@ -7,10 +7,10 @@ package factory
 import (
 	"errors"
 	"fmt"
+	"net/netip"
 	"os"
 	"strconv"
 	"sync"
-	"net/netip"
 
 	"github.com/asaskevich/govalidator"
 
@@ -109,9 +109,9 @@ func (c *Configuration) validate() (bool, error) {
 type Sbi struct {
 	Scheme       string `yaml:"scheme" valid:"in(http|https)"`
 	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,optional"` // IP that is registered at NRF.
-	RegisterIP   string `yaml:"registerIP,omitempty" valid:"host,optional"` // IP that is registered at NRF.
+	RegisterIP   string `yaml:"registerIP,omitempty" valid:"host,optional"`   // IP that is registered at NRF.
 	BindingIPv4  string `yaml:"bindingIPv4,omitempty" valid:"host,optional"`  // IP used to run the server in the node.
-	BindingIP    string `yaml:"bindingIP,omitempty" valid:"host,optional"`  // IP used to run the server in the node.
+	BindingIP    string `yaml:"bindingIP,omitempty" valid:"host,optional"`    // IP used to run the server in the node.
 	Port         int    `yaml:"port,omitempty" valid:"port,required,with_register,with_binding"`
 	Tls          *Tls   `yaml:"tls,omitempty" valid:"optional"`
 }
@@ -255,7 +255,7 @@ func (c *Config) GetSbiBindingAddr() string {
 	c.RLock()
 	defer c.RUnlock()
 
-	bindIP, err := netip.ParseAddr(c.GetSbiBindingIP());
+	bindIP, err := netip.ParseAddr(c.GetSbiBindingIP())
 	if err == nil {
 		logger.CfgLog.Warnf("Logger should not be nil")
 		return ""

@@ -2,13 +2,13 @@ package context
 
 import (
 	"fmt"
-	"os"
 	"net/netip"
+	"os"
 
 	"github.com/google/uuid"
 
-	"github.com/free5gc/ausf/internal/net_util"
 	"github.com/free5gc/ausf/internal/logger"
+	"github.com/free5gc/ausf/internal/net_util"
 	"github.com/free5gc/ausf/pkg/factory"
 	"github.com/free5gc/openapi/models"
 )
@@ -28,7 +28,7 @@ func InitAusfContext(context *AUSFContext) {
 	if sbi.RegisterIP != "" {
 		context.RegisterIP = sbi.RegisterIP
 	} else if sbi.RegisterIPv4 != "" {
-		context.RegisterIP =  sbi.RegisterIPv4
+		context.RegisterIP = sbi.RegisterIPv4
 	} else {
 		context.RegisterIP = factory.AusfSbiDefaultIPv4 // default uri scheme
 	}
@@ -46,15 +46,15 @@ func InitAusfContext(context *AUSFContext) {
 	}
 
 	if bindingIP := os.Getenv(sbi.BindingIP); bindingIP != "" {
-		context.BindingIP = bindingIP;
+		context.BindingIP = bindingIP
 		logger.InitLog.Info("Parsing ServerIP address from ENV Variable.")
 	} else if bindingIP := sbi.BindingIP; bindingIP != "" {
-		context.BindingIP = bindingIP;
+		context.BindingIP = bindingIP
 	} else if bindingIPv4 := os.Getenv(sbi.BindingIPv4); bindingIPv4 != "" {
-		context.BindingIP = bindingIPv4;
+		context.BindingIP = bindingIPv4
 		logger.InitLog.Info("Parsing ServerIPv4 address from ENV Variable.")
 	} else if bindingIPv4 := sbi.BindingIPv4; bindingIPv4 != "" {
-		context.BindingIP = bindingIPv4;
+		context.BindingIP = bindingIPv4
 	} else {
 		logger.InitLog.Warn("Error parsing ServerIPv4 address as string. Using the 0.0.0.0 address as default.")
 		context.BindingIP = "0.0.0.0"
