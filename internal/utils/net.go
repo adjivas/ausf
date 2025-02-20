@@ -1,4 +1,4 @@
-package net_util
+package net
 
 import (
 	"net"

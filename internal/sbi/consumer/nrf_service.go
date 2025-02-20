@@ -14,11 +14,12 @@ import (
 
 	ausf_context "github.com/free5gc/ausf/internal/context"
 	"github.com/free5gc/ausf/internal/logger"
+	ausf_utils "github.com/free5gc/ausf/internal/utils"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
 	"github.com/free5gc/openapi/Nnrf_NFManagement"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/ausf/internal/net_util"
+	"github.com/free5gc/smf/pkg/utils"
 )
 
 type nnrfService struct {
@@ -202,7 +203,7 @@ func (s *nnrfService) buildNfProfile(ausfContext *ausf_context.AUSFContext) (pro
 	profile.NfType = models.NfType_AUSF
 	profile.NfStatus = models.NfStatus_REGISTERED
 
-	registerAddr := net_util.RegisterAddr(ausfContext.RegisterIP)
+	registerAddr := ausf_utils.RegisterAddr(ausfContext.RegisterIP)
 	if registerAddr.Is6() {
 		profile.Ipv6Addresses = append(profile.Ipv6Addresses, ausfContext.RegisterIP)
 	} else if registerAddr.Is4() {
@@ -249,10 +250,10 @@ func (s *nnrfService) GetUdmUrl(nrfUri string) string {
 		ueauEndPoint := (*ueauService.IpEndPoints)[0]
 		port := uint16(ueauEndPoint.Port)
 		if len(udmInstance.Ipv6Addresses) > 0 && udmInstance.NfServices != nil {
-			registerIp := net_util.RegisterAddr(ueauEndPoint.Ipv6Address)
+			registerIp := ausf_utils.RegisterAddr(ueauEndPoint.Ipv6Address)
 			udmUrl = string(ueauService.Scheme) + "://" + netip.AddrPortFrom(registerIp, port).String()
 		} else if len(udmInstance.Ipv4Addresses) > 0 && udmInstance.NfServices != nil {
-			registerIp := net_util.RegisterAddr(ueauEndPoint.Ipv4Address)
+			registerIp := ausf_utils.RegisterAddr(ueauEndPoint.Ipv4Address)
 			udmUrl = string(ueauService.Scheme) + "://" + netip.AddrPortFrom(registerIp, port).String()
 		}
 	} else {

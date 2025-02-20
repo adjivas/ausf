@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/free5gc/ausf/internal/net_util"
+	ausf_utils "github.com/free5gc/ausf/internal/utils"
 	"github.com/free5gc/ausf/internal/logger"
 	"github.com/free5gc/ausf/pkg/factory"
 	"github.com/free5gc/openapi/models"
@@ -60,7 +60,7 @@ func InitAusfContext(context *AUSFContext) {
 		context.BindingIP = "0.0.0.0"
 	}
 
-	sbiRegisterIp := net_util.RegisterAddr(context.RegisterIP)
+	sbiRegisterIp := ausf_utils.RegisterAddr(context.RegisterIP)
 	sbiPort := uint16(context.SBIPort)
 
 	context.Url = string(context.UriScheme) + "://" + netip.AddrPortFrom(sbiRegisterIp, sbiPort).String()
@@ -87,7 +87,7 @@ func AddNfServices(serviceMap *map[models.ServiceName]models.NfService, config *
 	var ipEndPoint models.IpEndPoint
 	ipEndPoint.Port = int32(context.SBIPort)
 
-	registerAddr := net_util.RegisterAddr(context.RegisterIP)
+	registerAddr := ausf_utils.RegisterAddr(context.RegisterIP)
 	if registerAddr.Is6() {
 		ipEndPoint.Ipv6Address = context.RegisterIP
 	} else if registerAddr.Is4() {
